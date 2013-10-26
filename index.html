@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script type="text/javascript">
+	var DEBUG = true;
+</script>
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+
+<script src="./class/Point2D.js" type="text/javascript"></script>
+<script src="./class/Configuration.js" type="text/javascript"></script>
+<script src="./class/Polygon.js" type="text/javascript"></script>
+<script src="./class/Transformation.js" type="text/javascript"></script>
+<script src="./class/UI.js" type="text/javascript"></script>
+<script src="./class/Elem.js" type="text/javascript"></script>
+<script src="./class/Obstacle.js" type="text/javascript"></script>
+<script src="./class/Robot.js" type="text/javascript"></script>
+<script src="./class/PotentialFields.js" type="text/javascript"></script>
+<script src="./class/PathHandler.js" type="text/javascript"></script>
+<script src="./class/BiLinkedNode.js" type="text/javascript"></script>
+<script src="./class/BestFirstSearch.js" type="text/javascript"></script>
+<script src="./class/MotionPlanner.js" type="text/javascript"></script>
+<script src="./class/FileIO.js" type="text/javascript"></script>
+<script src="./class/Common.js" type="text/javascript"></script>
+<script src="./class/UIControl.js" type="text/javascript"></script>
+
+<link rel="stylesheet" media="screen" href="style/style.css" />
+<title>Motion Planner</title>
+</head>
+<body>
+	<!-- Facebook plugin BEGIN-->
+	<div id="fb-root"></div>
+	<script>(function(d, s, id) {
+	  var js, fjs = d.getElementsByTagName(s)[0];
+	  if (d.getElementById(id)) return;
+	  js = d.createElement(s); js.id = id;
+	  js.src = "//connect.facebook.net/zh_TW/all.js#xfbml=1&appId=119062131532497";
+	  fjs.parentNode.insertBefore(js, fjs);
+		}(document, 'script', 'facebook-jssdk'));</script>
+	<!-- Facebook plugin END-->
+		
+	<div class="upper radius">
+		<div class="title">Motion Planner <span class="littleTitle">[alpha ver 0.76]</span> 
+		<div style="display:inline;"><a href="javascript:showWhatsNew();"><img src="images/info.png" alt="information"/></a>
+		<div class="projInfo radius" onclick="showProjInfo()">
+		<p>What's new:</p>
+		<ul><li>20121019. Error handling for fail to find path.</li>
+			</ul>
+		<p>Implemented:</p>
+		<ul><li>Read data from file</li>
+			<li>Draw with canvas</li>
+			<li>NF1 extension for fill obstacles</li>
+			<li>Collision detection</li>
+			<li>Best First Search</li>
+			<li>Smoothing Path</li></ul>
+		<p>ToDo:</p>
+		<ul><li>Calculate potential with Control point</li>
+			<li>Control speed of play animation</li>
+			<li>Collision-free space</li>
+			</ul>
+		</div>
+		</div>
+		</div>
+		<div class="subtitle">javascript version.</div>
+	</div>
+	<div draggable="true" class="console radius">console>>>   <span id="error">Please select robot and obstacle data...</span></div>
+	<div id="con"></div>
+
+	<div id="overlay" class="overlay"></div>
+	
+	<!-- popup message BEGIN-->
+	<div id="boxpopup" class="box">
+		<a onclick="closeOffersDialog('boxpopup');" class="boxclose"><span class="icon_close"></span></a>
+		<div id="contentMsg">Please wait ...</div>
+	</div>
+	<!-- popup message END -->
+
+
+	<div id="mainWrapper">
+		<div id="mCanvasWrapper">
+			<div id="blockCanvas"></div>
+			<canvas id="mCanvas"></canvas>
+		</div>
+		<div class="ctrlPanel">
+			<form id='dataform'>
+			<!-- <select name="robot" onchange="showData(this.value, 'r')">
+			<option value="">Select robo:</option>
+			<option value="./data/robot01.dat">robot01</option>
+			<option value="./data/robot02.dat">robot02</option>
+			
+			</select>
+			<select name="obstacle" onchange="showData(this.value, 'o')">
+			<option value="">Select obs:</option>
+			<option value="./data/map01.dat">obstacle01</option>
+			<option value="./data/map02.dat">obstacle02</option>
+			</select>-->
+			</form>
+			<!-- <input type='button' id='drawBtn' value='Draw'/> -->
+			<div id="mapDataParam"></div>
+			<div id="potentialParam" class="param">
+				<div><input type='checkbox' id='potentialCB'/><span style="display: inline-block;">Show Potential</span></div>
+				<div class="notReady"><input type='checkbox' id='showNameCB'/><span style="display: inline-block;">Show names</span></div>
+				<div><input type='checkbox' id='showLogCB'/><span style="display: inline-block;">Show log</span></div>
+			</div>
+			<div id="searchParam" class="param">
+				<div><input type='button' id='searchBtn' value='Search for Path'/><div id="collideLabel" style="color:red; font-size: 0.8em; display: none;">Collision detected!</div></div>
+				<div id="heuristicNotReady" class="notReady">
+				<h4>Heuristic function of control point:</h4>
+				</div>
+			</div>
+			<div id="smoothParam" class="param">
+				<input type='button' id='smoothBtn' value='Smooth Path'/>
+				<h4>Pilot type when smoothing path:</h4></div>
+			<div id="animateParam" class="param">
+				<input type='button' id='animateBtn' value='Start Animation'/>
+				<div class="notReady">
+				<h4>Animate Speed:	<span id="spd"></span></h4><input id="animateSpeed" type="range" max="5" min="1" value="1"  />
+				</div>
+			</div>
+		</div>
+		
+		
+	</div>
+<br />
+
+
+<div id="pfCanvasGroup"><h4>Potential:</h4></div>
+<textarea id="log" rows="20">[log]</textarea>
+<div class="console radius"><label>Message board:<br/></label>
+	<div class="fb-comments" data-href="http://cs.nccu.edu.tw/~g9711/MP" data-num-posts="3" data-width="470"></div></div>
+<div class="footer radius">Zen@IMLAB.2012</div>
+<script type="text/javascript">
+var mpWorker = null;
+var context2d = null;
+var mCanvas = null;
+
+	$(function(){
+		mCanvas = document.getElementById("mCanvas");
+		mCanvas.width = mCanvas.height = CANVAS_LENGTH;
+		var block = $("#blockCanvas");
+		block.width(CANVAS_LENGTH).height(CANVAS_LENGTH);
+		block.hide();
+		var canvasWrapper = $("#mCanvasWrapper");
+		canvasWrapper.width(CANVAS_LENGTH+3).height(CANVAS_LENGTH+3);
+		context2d = mCanvas.getContext("2d");
+		mpWorker = new MotionPlanner(mCanvas);
+		mpWorker.init();
+
+		if(!DEBUG){
+			$("#con").hide();
+		}
+		listData($("#mapDataParam"));
+		listPilotType($("#smoothParam"));
+		listHeuristicType($("#heuristicNotReady"));
+		
+		$("#overlay").fadeOut('slow');
+		//closeOffersDialog('boxpopup');
+// 		$('#drawBtn').click(function(){
+// 			if(mpWorker != null){ //$("#error").html("Motion Planner is not ready...");
+// 				console.log("Motion Planner is ready...");
+// 				mpWorker.repaint();
+// 			}
+// 		});
+		
+		if(!$('#potentialCB').attr('checked')){
+			$("#pfCanvasGroup").css('display', 'none');
+		}
+		if(!$('#showLogCB').attr('checked')){
+			$("#log").hide();
+		}
+		
+		$('#potentialCB').change(function(){
+			console.log("click"+this.checked);
+			if(mpWorker != null){ //$("#error").html("Motion Planner is not ready...");
+				//$("#pfCanvasGroup").attr('hidden', this.checked);
+				if(this.checked){
+					$("#pfCanvasGroup").show(500);
+				}else{
+					$("#pfCanvasGroup").hide(500);
+				}
+			}
+		});
+		$('#showLogCB').change(function(){
+			if (this.checked) {
+				$("#log").show(500);
+			} else {
+				$("#log").hide(500);
+			}
+		});
+
+		$('#searchBtn').click(function() {
+			//console.log("click");
+			if (mpWorker != null) { //$("#error").html("Motion Planner is not ready...");
+				
+				var param = {
+					searchAlgorithm : SearchAlgorithm._BFS,
+					heuristic : $("#heuristic_type").val()
+				};
+				var callback = function(){
+					mpWorker.findPath(param);
+					mpWorker.repaint();
+					closeOffersDialog('boxpopup');
+				};
+				openOffersDialog(callback, 200, Message._PLEASE_WAIT);
+				//mpWorker.findPath(param);
+				//mpWorker.showPath = true;
+				
+				
+			}
+		});
+
+		$('#smoothBtn').click(function() {
+			//console.log("click");
+			if (mpWorker != null) { //$("#error").html("Motion Planner is not ready...");
+				console.log("pilot:" + $("#pilot_type").val());
+				log("index", "pilot:" + $("#pilot_type").val(), LogType._DEBUG);
+				mpWorker.smoothPath($("#pilot_type").val());
+			}
+		});
+
+		$('#animateBtn').click(function() {
+			if (mpWorker != null) { //$("#error").html("Motion Planner is not ready...");
+				mpWorker.showAnimation();
+			}
+		});
+		
+		$("#spd").html($("#animateSpeed").val()+"X");
+		$("#animateSpeed").change(function(){
+			$("#spd").html($(this).val()+"X");
+		});
+		
+		//FIXME
+		$(".notReady").hide();
+		
+		if(localStorage.visited != "true"){
+			log("localStorage", localStorage.visited, LogType._DEBUG);
+			showWhatsNew();
+			localStorage.visited = true;
+		}
+	});
+
+	function showData(str, type) {
+		if(str == "") return;
+		log("index", "wait...loading '"+str+"'", LogType._DEBUG);
+
+		var xmlhttp;
+		if (window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari
+			xmlhttp = new XMLHttpRequest();
+		} else {// code for IE6, IE5
+			xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+		}
+		var callback = function(){
+			xmlhttp.onreadystatechange = function() {
+				//console.error(xmlhttp);
+				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+					if (xmlhttp.responseText != "error") {
+						//$("#con").html(xmlhttp.responseText);
+						try{
+							var elems = null;
+							if (type == 'r') {
+								elems = createRobotFromData(xmlhttp.responseText);
+								log("index", "robot loaded...", LogType._DEBUG);
+							} else {
+								elems = createObstacleFromData(xmlhttp.responseText);
+								log("index", "obstacle loaded...", LogType._DEBUG);
+							}
+							console.dir(elems);
+							if (mpWorker == null){
+								//console.error("mpWorker is null");
+								log("index", "mpWorker is null", LogType._ERROR);
+							}
+							else {
+								mpWorker.load(elems);
+		
+								if (mpWorker.isReady()) {
+									mpWorker.updatePotentialFields();
+								}
+							}
+
+						}catch(err){
+							log("index", err.message, LogType._ERROR);
+						}
+						//$("#con").html(xmlhttp.responseText);
+					} else {
+						console.error(xmlhttp.responseText);
+					}
+				}
+				closeOffersDialog('boxpopup');
+			}
+			xmlhttp.open("GET", "getdata.php?action=read&data=" + str, true);
+			xmlhttp.send();
+		}
+		openOffersDialog(callback, 200, Message._PLEASE_WAIT);
+	}
+
+	function listData(parent) {
+		log("index", "wait...loading data", LogType._DEBUG);
+		if (parent == null) {
+			log("index", "no form read", LogType._ERROR);
+			return;
+		}
+		var xmlhttp;
+		if (window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari
+			xmlhttp = new XMLHttpRequest();
+		} else {// code for IE6, IE5
+			xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+		}
+		xmlhttp.onreadystatechange = function() {
+			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+				if (xmlhttp.responseText != "error") {
+					//$("#con").html(xmlhttp.responseText);
+					try {
+						parent.append(xmlhttp.responseText);
+					} catch (err) {
+						log("index", err.message, LogType._ERROR);
+					}
+					log("index", "..finished", LogType._DEBUG);
+				}
+			}
+
+		}
+		xmlhttp.open("GET", "getdata.php?action=listdata", true);
+		xmlhttp.send();
+	}
+	
+	function showProjInfo(){
+		$(".projInfo").toggle("100");
+	}
+	
+	function showWhatsNew(){
+		var newsMsg = 
+			'<p><b>What\'s new:</b></p>'+
+		'<ul><li>20121019. Error handling for fail to find path.</li></ul>'+
+			
+		'<p><b>Implemented:</b></p>'+
+		'<ul><li>Read data from file</li>'+
+			'<li>Draw with canvas</li>'+
+			'<li>NF1 extension for fill obstacles</li>'+
+			'<li>Collision detection</li>'+
+			'<li>Best First Search</li>'+
+			'<li>Smoothing Path</li></ul>'+
+		'<p><b>ToDo:</b></p>'+
+		'<ul><li>Calculate potential with Control point</li>'+
+			'<li>Control speed of play animation</li>'+
+			'<li>Collision-free space</li>'+
+			'</ul>'+
+		'</div>';
+		openOffersDialog(null, 200, newsMsg);
+		
+	}
+</script>
+</body>
+</html>

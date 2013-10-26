@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="BIG5">
+<title>Insert title here</title>
+<style type="text/css">
+#d1{
+	background: red;
+	display: none;
+}
+</style>
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+</head>
+<body>
+<div id="d1">Hello world</div>
+</body>
+
+<script type="text/javascript">
+$(function(){
+	runTest();
+});
+	
+	function func1(msg){
+		alert(msg);
+	}
+
+	function anim(callback){
+		$("#d1").fadeIn('slow', function(){
+			var call = callback.func;
+			var para = callback.para;
+			call(para);
+		});
+	}
+	
+	function runTest(){
+		var call = {
+			func: alert,
+			para: "haha"
+		};
+		anim(call);
+	}
+</script>
+</html>
