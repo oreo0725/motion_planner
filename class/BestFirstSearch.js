@@ -95,7 +95,7 @@ BestFirstSearch = {
 						break;
 					}
 				}else if(neighbour != null){
-					delete neighbour;
+					neighbour = null;
 				}
 			}
 			
