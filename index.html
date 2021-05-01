@@ -6,6 +6,7 @@
 	var DEBUG = true;
 </script>
 
+<script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
 
 <script src="./class/Point2D.js" type="text/javascript"></script>
@@ -150,7 +151,7 @@ var mCanvas = null;
 		if(!DEBUG){
 			$("#con").hide();
 		}
-		listData($("#mapDataParam"));
+		listData();
 		listPilotType($("#smoothParam"));
 		listHeuristicType($("#heuristicNotReady"));
 		
@@ -288,40 +289,37 @@ var mCanvas = null;
 				}
 				closeOffersDialog('boxpopup');
 			}
-			xmlhttp.open("GET", "getdata.php?action=read&data=" + str, true);
+			xmlhttp.open("GET", "read/" + str, true);
 			xmlhttp.send();
 		}
 		openOffersDialog(callback, 200, Message._PLEASE_WAIT);
 	}
 
-	function listData(parent) {
+	function listData() {
+		let parent = $("#mapDataParam")
 		log("index", "wait...loading data", LogType._DEBUG);
 		if (parent == null) {
 			log("index", "no form read", LogType._ERROR);
 			return;
 		}
-		var xmlhttp;
-		if (window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari
-			xmlhttp = new XMLHttpRequest();
-		} else {// code for IE6, IE5
-			xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-		}
-		xmlhttp.onreadystatechange = function() {
-			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-				if (xmlhttp.responseText != "error") {
-					//$("#con").html(xmlhttp.responseText);
-					try {
-						parent.append(xmlhttp.responseText);
-					} catch (err) {
-						log("index", err.message, LogType._ERROR);
-					}
-					log("index", "..finished", LogType._DEBUG);
-				}
-			}
+		$.get('/elements', function(data) {
+			console.log("[loaddata]",data);
+			var sel = $('<select name="robot" onchange="showData(this.value, \'r\')">').appendTo(parent);
+			
+			sel.append($("<option>").text('---'));
+			data.robots.forEach(e => {
+				sel.append($("<option>").attr('value', e).text(e));
+			});
 
-		}
-		xmlhttp.open("GET", "getdata.php?action=listdata", true);
-		xmlhttp.send();
+			//obstacles
+			sel = $('<select name="obstacle" onchange="showData(this.value, \'o\')">').appendTo(parent);
+			sel.append($("<option>").text('---'));
+			
+			data.obstacles.forEach(e => {
+				sel.append($("<option>").attr('value', e).text(e));
+			});
+
+		});
 	}
 	
 	function showProjInfo(){
