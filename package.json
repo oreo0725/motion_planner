@@ -1,0 +1,42 @@
+{
+  "name": "motion_planner",
+  "version": "1.0.0",
+  "description": "This is a path planning implementation. A Robot will find it's goal to go and avoid the obstacle in the map",
+  "main": "app.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "build": "babel \"src/*.js\" -d dist/src ; babel app.js -d dist; yarn run pack",
+    "pack": "cp index.html dist/; cp -r class dist/; cp -r data dist/; cp -r style dist/; cp -r images dist/; cp -r src dist/",
+    "dev": "yarn build && nodemon dist/app.js --exec babel-node",
+    "test": "mocha --require @babel/register --watch \"test/*.test.js\"",
+    "clean": "rm -rf dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oreo0725/motion_planner.git"
+  },
+  "author": "zen",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/oreo0725/motion_planner/issues"
+  },
+  "homepage": "https://github.com/oreo0725/motion_planner#readme",
+  "dependencies": {
+    "connect": "^3.7.0",
+    "cookie-parser": "^1.4.5",
+    "express": "^4.17.1",
+    "nodemon": "^2.0.3"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.13.16",
+    "@babel/core": "^7.14.0",
+    "@babel/node": "^7.13.13",
+    "@babel/preset-env": "^7.14.0",
+    "@babel/register": "^7.13.16",
+    "live-server": "^1.2.1",
+    "mocha": "^8.3.2",
+    "should": "^13.2.3"
+  }
+}
