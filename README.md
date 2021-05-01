@@ -7,8 +7,8 @@ This is an implementation of path planning algorithm.
 
 ## Algorithm
 
-NF1 - potential fields 
-BFS - Breath first search
+- NF1 - potential fields 
+- BFS - Breath first search
 
 ---
 
