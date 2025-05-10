@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "build": "babel \"src/*.js\" -d dist/src ; babel app.js -d dist; yarn run pack",
+    "build": "babel \"src/*.js\" -d dist/src ; babel app.js -d dist; yarn run pack; node scripts/generate-static-data.js",
     "pack": "cp index.html dist/; cp -r class dist/; cp -r data dist/; cp -r style dist/; cp -r images dist/; cp -r src dist/",
     "dev": "yarn build && nodemon dist/app.js --exec babel-node",
     "test": "mocha --require @babel/register --watch \"test/*.test.js\"",
