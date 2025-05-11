@@ -13,7 +13,55 @@ function getMapData() {
     robots: [],
     obstacles: [],
   };
+  try {
+  const resp = {
+    robots: [],
+    obstacles: [],
+  };
 robots: [],
+    obstacles: [],
+  };
+  try {
+    const files = fs.readdirSync(path.join(__dirname, '../data/'));
+
+    files.forEach((file) => {
+// Generate elements.json
+function getMapData() {
+  const resp = {
+    robots: [],
+    obstacles: [],
+  };
+  try {
+    const files = fs.readdirSync(path.join(__dirname, '../data/'));
+
+    files.forEach((file) => {
+      if (file.startsWith(MAP_PREFIX)) {
+        resp.obstacles.push(file);
+      } else if (file.startsWith(ROBOT_PREFIX)) {
+        resp.robots.push(file);
+      }
+    });
+  } catch (error) {
+    console.error('Error reading directory:', error);
+  }
+  
+  return resp;
+}
+
+// Create directory if it doesn't exist
+const staticDataDir = path.join(__dirname, '../dist/static-data');
+if (!fs.existsSync(staticDataDir)) {
+  fs.mkdirSync(staticDataDir, { recursive: true });
+}
+        resp.obstacles.push(file);
+      } else if (file.startsWith("robot")) {
+        resp.robots.push(file);
+      }
+    });
+// Generate elements.json
+function getMapData() {
+  const resp = {
+    robots: [],
     obstacles: [],
   };
   try {
@@ -28,13 +76,33 @@ robots: [],
     });
   } catch (error) {
     console.error('Error reading directory:', error);
+    throw error; // Rethrow the error after logging
+  }
+  
+  return resp;
+}
+
+// Create directory if it doesn't exist
+const staticDataDir = path.join(__dirname, '../dist/static-data');
+if (!fs.existsSync(staticDataDir)) {
+  fs.mkdirSync(staticDataDir, { recursive: true });
+}
+
+// Define constants for file prefixes
+const MAP_PREFIX = 'map';
+    console.error('Error reading directory:', error);
   }
   
   return resp;
 }
 
   files.forEach((file) => {
-// Create directory if it doesn't exist
+}
+  
+  return resp;
+}
+
+// Define constants for file prefixes
 const staticDataDir = path.join(__dirname, '../dist/static-data');
 if (!fs.existsSync(staticDataDir)) {
   fs.mkdirSync(staticDataDir, { recursive: true });
@@ -44,6 +112,42 @@ if (!fs.existsSync(staticDataDir)) {
 const MAP_PREFIX = 'map';
 const ROBOT_PREFIX = 'robot';
 
+// Generate elements.json
+function getMapData() {
+  const resp = {
+    robots: [],
+    obstacles: [],
+  };
+robots: [],
+    obstacles: [],
+  };
+  try {
+    const files = fs.readdirSync(path.join(__dirname, '../data/'));
+
+    files.forEach((file) => {
+      if (file.startsWith(MAP_PREFIX)) {
+        resp.obstacles.push(file);
+      } else if (file.startsWith(ROBOT_PREFIX)) {
+        resp.robots.push(file);
+      }
+    });
+  } catch (error) {
+    console.error('Error reading directory:', error);
+  }
+  
+  return resp;
+}
+
+  files.forEach((file) => {
+    if (file.startsWith(MAP_PREFIX)) {
+      resp.obstacles.push(file);
+    } else if (file.startsWith(ROBOT_PREFIX)) {
+      resp.robots.push(file);
+    }
+  });
+  
+  return resp;
+}
 // Generate elements.json
 function getMapData() {
   const resp = {
@@ -62,7 +166,24 @@ function getMapData() {
   
   return resp;
 }
-      resp.obstacles.push(file);
+
+const elementsData = getMapData();
+fs.writeFileSync(
+  path.join(staticDataDir, 'elements.json'),
+  JSON.stringify(elementsData, null, 2)
+);
+console.log('Generated elements.json');
+
+// Generate data files for each robot and obstacle
+function processDataFile(filePath) {
+}
+
+const elementsData = getMapData();
+fs.writeFileSync(
+  path.join(staticDataDir, 'elements.json'),
+  JSON.stringify(elementsData, null, 2)
+);
+console.log('Generated elements.json');
     } else if (file.startsWith("robot")) {
       resp.robots.push(file);
     }
@@ -90,12 +211,95 @@ fs.writeFileSync(
 console.log('Generated elements.json');
 
 // Generate data files for each robot and obstacle
+const elementsData = getMapData();
+fs.writeFileSync(
+  path.join(staticDataDir, 'elements.json'),
+  JSON.stringify(elementsData, null, 2)
+);
+console.log('Generated elements.json');
+
+// Generate data files for each robot and obstacle
+async function processDataFile(filePath) {
+  try {
+    const data = await fs.promises.readFile(filePath, { encoding: 'utf8' });
+    let lines = data.split("
+");
+    let resp = '';
+    lines.forEach((l) => {
+      if (l.startsWith('#') || l === '') {
+        return;
+      }
+      let nodes = l.split(" ");
+      nodes.forEach((n) => {
+        if (n === '') {
+          return;
+        }
+        resp += n + "\t";
+      });
+    });
+    return resp;
+  } catch (error) {
+    console.error(`Error processing file ${filePath}:`, error);
+    throw error;
+  }
+}
+
+// Process all robot and obstacle files
+const dataDir = path.join(__dirname, '../data');
+elementsData.robots.forEach(async (robotFile) => {
+  try {
+    const processedData = await processDataFile(path.join(dataDir, robotFile));
+    fs.writeFileSync(
+      path.join(staticDataDir, `${robotFile}.json`),
+      JSON.stringify({ data: processedData }, null, 2)
+    );
+    console.log(`Generated ${robotFile}.json`);
+  } catch (error) {
+    console.error(`Error processing robot file ${robotFile}:`, error);
+  }
+});
+  const data = await fs.promises.readFile(filePath, { encoding: 'utf8' });
+  let lines = data.split("
+");
+  let resp = '';
+// Generate data files for each robot and obstacle
 async function processDataFile(filePath) {
   const data = await fs.promises.readFile(filePath, { encoding: 'utf8' });
   let lines = data.split("
 ");
   let resp = '';
-  lines.forEach((l) => {
+  lines.forEach((line) => {
+    if (line.startsWith('#') || line === '') {
+      return;
+    }
+    let nodes = line.split(" ");
+    nodes.forEach((node) => {
+      if (node === '') {
+        return;
+      }
+      resp += node + "\t";
+    });
+  });
+  return resp;
+}
+
+// Process all robot and obstacle files
+const dataDir = path.join(__dirname, '../data');
+elementsData.robots.forEach(async (robotFile) => {
+  let lines = data.split("
+");
+  let resp = '';
+  lines.forEach((line) => {
+    if (line.startsWith('#') || line === '') {
+      return;
+    }
+    let nodes = line.split(" ");
+    nodes.forEach((node) => {
+      if (node === '') {
+        return;
+      }
+      resp += node + "\t";
+    });
     if (l.startsWith('#') || l === '') {
       return;
     }
@@ -113,7 +317,29 @@ async function processDataFile(filePath) {
 // Process all robot and obstacle files
 const dataDir = path.join(__dirname, '../data');
 elementsData.robots.forEach(async (robotFile) => {
-  let lines = data.split("\n");
+}
+
+// Process all robot and obstacle files
+const dataDir = path.join(__dirname, '../data');
+elementsData.robots.forEach(async (robotFile) => {
+  const processedData = await processDataFile(path.join(dataDir, robotFile));
+  fs.writeFileSync(
+    path.join(staticDataDir, `${robotFile}.json`),
+    JSON.stringify({ data: processedData }, null, 2)
+  );
+  console.log(`Generated ${robotFile}.json`);
+});
+
+// Import the DOMPurify library for sanitizing user input
+// const DOMPurify = require('dompurify');
+
+elementsData.robots.forEach(robotFile => {
+  const processedData = processDataFile(path.join(dataDir, robotFile));
+  fs.writeFileSync(
+    path.join(staticDataDir, `${robotFile}.json`),
+    JSON.stringify({ data: processedData }, null, 2)
+  );
+  console.log(`Generated ${robotFile}.json`);
   let resp = '';
   lines.forEach((l) => {
     if (l.startsWith('#') || l === '') {
