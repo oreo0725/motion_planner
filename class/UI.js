@@ -5,12 +5,24 @@ var isMouseDown = false;
 var mouseDownPt = new Point2D();
 var prevPt = null;
 
+function normalizeAngle(angle){
+	while (angle > Math.PI) angle -= 2 * Math.PI;
+	while (angle <= -Math.PI) angle += 2 * Math.PI;
+	return angle;
+}
+
 function getThetaBetween(p0, p1){
-	return (Math.atan2(p1.y, p1.x) - Math.atan2(p0.y, p0.x))/2 + Math.PI;
+	var a0 = Math.atan2(p0.y, p0.x);
+	var a1 = Math.atan2(p1.y, p1.x);
+	var d = a1 - a0;
+	return normalizeAngle(d);
 }
 
 function getArcThetaBetween2(p0, p1){
-	return Math.atan(Math.abs(p0.y - p1.y)/ Math.abs(p0.x - p1.x));
+	var dx = p1.x - p0.x;
+	var dy = p1.y - p0.y;
+	if (dx === 0 && dy === 0) return 0;
+	return Math.atan2(dy, dx);
 }
 
 function max(a, b){
